@@ -1,0 +1,96 @@
+name: Build and Release
+
+on:
+  push:
+    # Trigger on tags for releases
+    tags:
+      - 'v*.*.*'
+    # Trigger on push to dev branch
+    branches:
+      - dev
+      - develop
+      - 'feature/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Tags for version releases (when pushed with tags)
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Tags for branches
+            type=ref,event=branch
+            # Dev-specific tags
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/develop' }}
+            type=raw,value=dev-{{sha}},enable=${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/develop' }}
+            # Feature branch tags
+            type=raw,value=feature-{{branch}},enable=${{ startsWith(github.ref, 'refs/heads/feature/') }}
+            # Latest tag only for main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  create-release:
+    # Only create releases for version tags, not for branch pushes
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## What's Changed
+            
+            Docker image: `${{ env.REGISTRY }}/${{ github.repository }}:${{ github.ref_name }}`
+            
+            ### Pull the image:
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ github.repository }}:${{ github.ref_name }}
+            ```
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.ref_name }}
+          draft: false
+          prerelease: false
