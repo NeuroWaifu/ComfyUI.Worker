@@ -56,7 +56,11 @@ def get_boto_client(
         aws_access_key_id=access_key_id,
         aws_secret_access_key=secret_access_key,
         config=Config(
-            signature_version="s3v4", retries={"max_attempts": 3, "mode": "standard"}
+            signature_version="s3v4", 
+            retries={
+                "max_attempts": 3, 
+                "mode": "standard"
+            }
         ),
         region_name=region,
     )
