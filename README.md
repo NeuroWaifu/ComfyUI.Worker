@@ -26,12 +26,12 @@ A production-ready serverless worker implementation for running ComfyUI workflow
 
 1. **Use Pre-built Image**:
    ```
-   ghcr.io/neurowaifu/neurowaifu.worker.comfyui:latest
+   ghcr.io/neurowaifu/comfyui.worker:latest
    ```
    
    Or pull directly:
    ```bash
-   docker pull ghcr.io/neurowaifu/neurowaifu.worker.comfyui:latest
+   docker pull ghcr.io/neurowaifu/comfyui.worker:latest
    ```
 
 2. **Create RunPod Serverless Endpoint**:
@@ -48,8 +48,8 @@ For local testing and development:
 
 ```bash
 # Clone the repository
-git clone https://github.com/NeuroWaifu/NeuroWaifu.Worker.ComfyUI.git
-cd NeuroWaifu.Worker.ComfyUI
+git clone https://github.com/NeuroWaifu/ComfyUI.Worker.git
+cd ComfyUI.Worker
 
 # Build and run locally
 docker-compose up
@@ -245,7 +245,7 @@ To add custom nodes, you need to create a custom Docker image:
 
 ```dockerfile
 # Base on this worker image
-FROM ghcr.io/neurowaifu/neurowaifu.worker.comfyui:latest
+FROM ghcr.io/neurowaifu/comfyui.worker:latest
 
 # Install custom nodes using the helper script
 RUN comfy-node-install \
