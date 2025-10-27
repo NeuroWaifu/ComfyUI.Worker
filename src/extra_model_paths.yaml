@@ -13,5 +13,5 @@ runpod_worker_comfy:
   upscale_models: models/upscale_models/
   vae: models/vae/
   unet: models/unet/
-  seedvr2: SEEDVR2/
-  rife: RIFE/
+  seedvr2: models/SEEDVR2/
+  rife: models/RIFE/
